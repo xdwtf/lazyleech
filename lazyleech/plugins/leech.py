@@ -50,13 +50,9 @@ async def torrent_cmd(client, message):
             if mimetype != 'application/x-bittorrent':
                 os.remove(link)
                 link = None
-    nf = None
     if not link:
         if text:
-            x = text[0].split('|', 1)
-            link = x[0].strip()
-            if len(x)==2:
-                nf = x[1]
+            link = text[0].strip()
         elif not getattr(reply, 'empty', True):
             document = reply.document
             link = reply.text
@@ -81,10 +77,10 @@ async def torrent_cmd(client, message):
 - /filetorrent <i>&lt;Torrent URL or File&gt;</i> - Sends videos as files
 - /filetorrent <i>(as reply to a Torrent URL or file)</i> - Sends videos as files''')
         return
-    await initiate_torrent(client, message, link, flags, nf)
+    await initiate_torrent(client, message, link, flags)
     await message.stop_propagation()
 
-async def initiate_torrent(client, message, link, flags, newFile):
+async def initiate_torrent(client, message, link, flags):
     user_id = message.from_user.id
     reply = await message.reply_text('Adding torrent...')
     try:
@@ -95,7 +91,7 @@ async def initiate_torrent(client, message, link, flags, newFile):
     finally:
         if os.path.isfile(link):
             os.remove(link)
-    await handle_leech(client, message, gid, reply, user_id, flags, newFile)
+    await handle_leech(client, message, gid, reply, user_id, flags)
 
 @Client.on_message(filters.command(['magnet', 'zipmagnet', 'filemagnet']) & filters.chat(ALL_CHATS))
 async def magnet_cmd(client, message):
@@ -206,7 +202,7 @@ async def initiate_directdl(client, message, link, filename, flags):
         await handle_leech(client, message, gid, reply, user_id, flags)
 
 leech_statuses = dict()
-async def handle_leech(client, message, gid, reply, user_id, flags, newFile):
+async def handle_leech(client, message, gid, reply, user_id, flags):
     prevtext = None
     torrent_info = await aria2_tell_status(session, gid)
     last_edit = 0
@@ -272,7 +268,7 @@ async def handle_leech(client, message, gid, reply, user_id, flags, newFile):
         task = None
         if upload_queue._unfinished_tasks:
             task = asyncio.create_task(reply.edit_text('Download successful, waiting for queue...'))
-        upload_queue.put_nowait((client, message, reply, torrent_info, user_id, flags, newFile))
+        upload_queue.put_nowait((client, message, reply, torrent_info, user_id, flags))
         try:
             await aria2_remove(session, gid)
         except Aria2Error as ex:
