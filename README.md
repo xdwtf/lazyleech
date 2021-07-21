@@ -15,8 +15,39 @@
 /filemagnet link | newFileName
 /zipmagnet link | newFileName
 link | newFileName (auto detects)
+</pre><br>
+<h3>Note: I have added serialize renaming for torrents with multiple files</h3>
+<pre>
+You just need to add {p or P or s or S, any number (optional)} at the end of newFileName
+like
+
+/filetorrent link | newFileName {p,3}
+
+well
+p/P = prefix
+s/S = suffix
+and the number stated is range of digits for serialization
+default is 3
+Thus,
+
+/filetorrent link | test.mkv {p,2} gives
+01 test.mkv
+02 test.mkv
+03 test.mkv
+04 test.mkv
+
+/filetorrent link | test.mkv {s,4} gives
+test 0001.mkv
+test 0002.mkv
+test 0003.mkv
+test 0004.mkv
+
+/filetorrent link | test.mkv {p} gives
+001 test.mkv
+002 test.mkv
+003 test.mkv
+004 test.mkv
 </pre>
-<h3>Note: I have added serialize renaming for torrents with multiple files, well i am bad with explanation so just drop pm in tg @lostb053 for more info</h3>
 
 # Table of Content
 - [WHAT IS THIS REPO ABOUT ?](#what-is-this-repo-about)
