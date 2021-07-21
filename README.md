@@ -82,6 +82,8 @@ testwatermark
 ## Credits 📍
 
 [@TheKneesocks](https://t.me/TheKneesocks)
+[@DeletedUser420](https://t.me/DeletedUser420)
+[Oppai-glit](https://github.com/oppai-glit) on github for his [repo](https://github.com/oppai-glit/lazyleech)
 
 ## Points To Be Noted 
 
