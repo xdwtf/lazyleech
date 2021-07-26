@@ -9,6 +9,7 @@ RUN apt -y update && \
     apt install -y --no-install-recommends python3 python3-pip ffmpeg aria2 file && \
     rm -rf /var/lib/apt/lists/* \
     && echo "Etc/UTC" > /etc/timezone \
-    && pip3 install -r /app/requirements.txt
+    && pip3 install -r /app/requirements.txt \
+    && unminimize -y
 COPY . .
 CMD ["bash","run.sh"]
