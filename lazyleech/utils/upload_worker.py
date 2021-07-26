@@ -153,10 +153,12 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
     try:
         with tempfile.TemporaryDirectory(dir=str(user_id)) as tempdir:
             if file_has_big:
+                print('1st step')
                 async def _split_files():
                     splitted = await split_files(filepath, tempdir, force_document)
                     for a, i in enumerate(os.listdir(tempdir), 1):
                         to_upload.append((tempdir+'/'+i, filename + f' (part {a})'))
+                        print('2nd step')
                 split_task = asyncio.create_task(_split_files())
             else:
                 to_upload.append((filepath, filename))
@@ -175,6 +177,7 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
             if upload_identifier in stop_uploads:
                 return sent_files
             for a, (filepath, filename) in enumerate(to_upload):
+                print('3rd step')
                 while True:
                     if a:
                         async with upload_tamper_lock:
@@ -194,6 +197,7 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
                     mimetype = await get_file_mimetype(filepath)
                     progress_args = (client, message, upload_wait, filename, user_id)
                     try:
+                        print('4th step')
                         if not force_document and mimetype.startswith('video/'):
                             duration = 0
                             video_json = await get_video_info(filepath)
