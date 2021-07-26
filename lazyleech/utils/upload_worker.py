@@ -174,6 +174,17 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
             newFileName = os.path.dirname(filepath)+'/'+ps+newFile+ss+'.'+file_ext
             os.rename(filepath, newFileName)
             filepath = newFileName
+        else:
+            # this is regex auto rename feature on somebody's request
+            newFile = re.sub(r'\(.*?\)', '', os.path.basename(filepath))
+            newFile = re.sub(r'\[.*?\]', '', newFile) # separate because it will fail in situations like 'Hello World [1080p (10 bits)].mkv'
+            nf = newFile.split('.')
+            file_ext = nf.pop().strip()
+            newFile = '.'.join(nf).strip()
+            newFile = re.sub(r' +', ' ', newFile) # to remove unnecessary & double spaces
+            newFileName = os.path.dirname(filepath)+'/'+newFile+'.'+file_ext
+            os.rename(filepath, newFileName)
+            filepath = newFileName
         with tempfile.TemporaryDirectory(dir=str(user_id)) as tempdir:
             if file_has_big:
                 async def _split_files():

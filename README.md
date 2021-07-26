@@ -6,7 +6,7 @@
 
 
 <h2>USE THIS BRANCH ON YOUR RISK, I HAVE ADDED FILE-RENAMING IN TORRENT, MAGNET AND AUTO-DETECT FUNCTIONS IN THIS BRANCH</h2>
-
+<h3>Now this also have auto rename feature based on regex custom made on someone's request, it just remove stuff between brackets in torrent file name</h3>
 <pre>
 /filetorrent link | newFileName
 /torrent link | newFileName
