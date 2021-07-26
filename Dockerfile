@@ -6,10 +6,9 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && \
     apt -y install git && \
     apt update && \
-    apt install -y --no-install-recommends python3 python3-pip ffmpeg aria2 file && \
+    apt install -y --no-install-recommends python3 python3-pip ffmpeg aria2 file p7zip-full && \
     rm -rf /var/lib/apt/lists/* \
     && echo "Etc/UTC" > /etc/timezone \
-    && pip3 install -r /app/requirements.txt \
-    && unminimize -y
+    && pip3 install -r /app/requirements.txt
 COPY . .
 CMD ["bash","run.sh"]
