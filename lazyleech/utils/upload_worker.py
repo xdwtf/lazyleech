@@ -156,7 +156,7 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
             if file_has_big:
                 print('1st step')
                 async def _split_files():
-                    rf = await sf(filepath, filename, user_id)
+                    rf = sf(filepath, filename, user_id)
                     if rf is not None:
                         for i in os.listdir(rf):
                             to_upload.append((rf+'/'+i, filename))
@@ -302,7 +302,7 @@ async def progress_callback(current, total, client, message, reply, filename, us
         for admin_chat in ADMIN_CHATS:
             await client.send_message(admin_chat, traceback.format_exc(), parse_mode=None)
 
-async def sf(filepath, filename, user_id):
+def sf(filepath, filename, user_id):
     ext = os.path.splitext(filename)[1]
     args =  ["7z", "a", "-tzip", "-y", "-mx1"]
     rf = str(user_id)+'/'+str(uuid4())[:8]
@@ -310,9 +310,9 @@ async def sf(filepath, filename, user_id):
     args.append(os.path.join(rf, os.path.basename(filepath)[-(248-len(ext)):]+'.zip'))
     args.append(filepath)
     args.append("-v1995m")
-    proc = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
+    proc = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
-    if b"Everything is Ok" not in out:
-        return None
-    else:
+    if b"Everything is Ok" in out:
         return rf
+    if b"ERROR" in out:
+        return None
