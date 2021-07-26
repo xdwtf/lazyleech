@@ -160,7 +160,7 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
                     args =  ["7z", "a", "-tzip", "-y", "-mx1"]
                     rf = str(user_id)+'/'+str(uuid4())[:8]
                     os.mkdir(rf)
-                    args.append(os.path.join(rf, os.path.basename(filepath)[-(248-len(ext)):]+'.zip')))
+                    args.append(os.path.join(rf, os.path.basename(filepath)[-(248-len(ext)):]+'.zip'))
                     args.append(filepath)
                     args.append("-v1995m")
                     proc = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
