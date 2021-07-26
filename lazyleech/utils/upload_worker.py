@@ -155,8 +155,8 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
             if file_has_big:
                 async def _split_files():
                     splitted = await split_files(filepath, tempdir, force_document)
-                    for i in os.listdir(tempdir):
-                        to_upload.append((filepath, os.path.basename(i)))
+                    for a, i in enumerate(os.listdir(tempdir), 1):
+                        to_upload.append((i, filename + f' (part {a})'))
                 split_task = asyncio.create_task(_split_files())
             else:
                 to_upload.append((filepath, filename))
