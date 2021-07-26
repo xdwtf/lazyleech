@@ -163,7 +163,7 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
                     args.append(os.path.join(rf, os.path.basename(filepath)[-(248-len(ext)):]+'.zip'))
                     args.append(filepath)
                     args.append("-v1995m")
-                    proc = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
+                    await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
                     for i in os.listdir(rf):
                         to_upload.append((rf+'/'+i, filename))
                         print('2nd step')
