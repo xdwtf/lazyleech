@@ -153,6 +153,27 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
     sent_files = []
     split_task = None
     try:
+        ss = ''
+        ps = ''
+        if newFile is not None:
+            regcheck = re.match('.*{(.*)}$', newFile)
+            if regcheck is not None:
+                sd = str(regcheck.groups()[0])
+                sds = sd.split(',')
+                sr = 3
+                if len(sds)==2:
+                    sr = int(sds[1])
+                if ('p' or 'P') in sds[0]:
+                    ps = ('0'*(sr-len(str(count))))+(str(count))+' '
+                if ('s' or 'S') in sds[0]:
+                    ss = ' '+('0'*(sr-len(str(count))))+(str(count))
+            newFile = re.sub(r'{.*}$', '', newFile)
+            nf = newFile.split('.')
+            file_ext = nf.pop().strip()
+            newFile = '.'.join(nf).strip()
+            newFileName = os.path.dirname(filepath)+'/'+ps+newFile+ss+'.'+file_ext
+            os.rename(filepath, newFileName)
+            filepath = newFileName
         with tempfile.TemporaryDirectory(dir=str(user_id)) as tempdir:
             if file_has_big:
                 async def _split_files():
@@ -176,7 +197,6 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
                     await asyncio.sleep(1)
             if upload_identifier in stop_uploads:
                 return sent_files
-            serialize = False
             for a, (filepath, filename) in enumerate(to_upload):
                 while True:
                     if a:
@@ -197,27 +217,6 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
                     mimetype = await get_file_mimetype(filepath)
                     progress_args = (client, message, upload_wait, filename, user_id)
                     try:
-                        ss = ''
-                        ps = ''
-                        if newFile is not None:
-                            regcheck = re.match('.*{(.*)}$', newFile)
-                            if regcheck is not None:
-                                sd = str(regcheck.groups()[0])
-                                sds = sd.split(',')
-                                sr = 3
-                                if len(sds)==2:
-                                    sr = int(sds[1])
-                                if ('p' or 'P') in sds[0]:
-                                    ps = ('0'*(sr-len(str(count))))+(str(count))+' '
-                                if ('s' or 'S') in sds[0]:
-                                    ss = ' '+('0'*(sr-len(str(count))))+(str(count))
-                                newFile = re.sub(r'{.*}$', '', newFile)
-                            nf = newFile.split('.')
-                            file_ext = nf.pop().strip()
-                            newFile = '.'.join(nf).strip()
-                            newFileName = os.path.dirname(filepath)+'/'+ps+newFile+ss+'.'+file_ext
-                            os.rename(filepath, newFileName)
-                            filepath = newFileName
                         if not force_document and mimetype.startswith('video/'):
                             duration = 0
                             video_json = await get_video_info(filepath)
