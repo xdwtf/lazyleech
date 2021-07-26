@@ -24,6 +24,7 @@ import asyncio
 import zipfile
 import tempfile
 import traceback
+from uuid import uuid4
 from collections import defaultdict
 from natsort import natsorted
 from pyrogram.parser import html as pyrogram_html
@@ -155,9 +156,16 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
             if file_has_big:
                 print('1st step')
                 async def _split_files():
-                    splitted = await split_files(filepath, tempdir, force_document)
-                    for a, i in enumerate(os.listdir(tempdir), 1):
-                        to_upload.append((tempdir+'/'+i, filename + f' (part {a})'))
+                    ext = os.path.splitext(filename)[1]
+                    args =  ["7z", "a", "-tzip", "-y", "-mx1"]
+                    rf = str(user_id)+'/'+str(uuid4())[:8]
+                    os.mkdir(rf)
+                    args.append(os.path.join(rf, os.path.basename(filepath)[-(248-len(ext)):]+'.zip')))
+                    args.append(filepath)
+                    args.append("-v1995m")
+                    proc = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
+                    for i in os.listdir(rf):
+                        to_upload.append((rf+'/'+i, filename))
                         print('2nd step')
                 split_task = asyncio.create_task(_split_files())
             else:
