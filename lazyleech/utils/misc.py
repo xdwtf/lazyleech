@@ -47,17 +47,36 @@ async def get_file_mimetype(filename):
     return mimetype or ''
 
 async def split_files(filename, destination_dir, no_ffmpeg=False):
-    x = os.path.splitext(filename)
-    head = x
-    if len(x)==2:
-        head, ext = x
-    args =  ["7z", "a", "-tzip", "-y", "-mx0"]
-    newFile = destination_dir+'/'+head.split('/').pop()+'.zip'
-    args.append(newFile)
+    ext = os.path.splitext(filename)[1]
+    if not no_ffmpeg and (await get_file_mimetype(filename)).startswith('video/'):
+        video_info = (await get_video_info(filename))['format']
+        if 'duration' in video_info:
+            times = 1
+            ss = Decimal('0.0')
+            duration = Decimal(video_info['duration'])
+            files = []
+            while duration - ss > 1:
+                filepath = os.path.join(destination_dir, os.path.splitext(os.path.basename(filename))[0][-(248-len(ext)):] + ('-' if ext else '.') + 'part' + str(times) + ext)
+                proc = await asyncio.create_subprocess_exec('ffmpeg', '-y', '-i', filename, '-ss', str(ss), '-c', 'copy', '-fs', '1900000000', filepath)
+                await proc.communicate()
+                video_info = (await get_video_info(filepath)).get('format')
+                if not video_info:
+                    break
+                if 'duration' not in video_info:
+                    break
+                files.append(filepath)
+                times += 1
+                ss += Decimal(video_info['duration'])
+            return files
+    args = ['split', '--verbose', '--numeric-suffixes=1', '--bytes=2097152000', '--suffix-length=2']
+    if ext:
+        args.append(f'--additional-suffix={ext}')
     args.append(filename)
-    args.append("-v1995m")
+    args.append(os.path.join(destination_dir, os.path.basename(filename)[-(248-len(ext)):] + ('-' if ext else '.') + 'part'))
     proc = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE)
-    return newFile
+    stdout, _ = await proc.communicate()
+    return shlex.split(' '.join([i[14:] for i in stdout.decode().strip().split('\n')]))
+
 
 video_duration_cache = dict()
 video_duration_lock = asyncio.Lock()
