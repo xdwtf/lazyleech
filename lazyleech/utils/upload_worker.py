@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from asyncio.tasks import FIRST_COMPLETED
 import os
 import re
 import html
@@ -24,6 +25,7 @@ import asyncio
 import zipfile
 import tempfile
 import traceback
+import threading
 import subprocess
 from uuid import uuid4
 from collections import defaultdict
@@ -157,11 +159,16 @@ async def _upload_file(client, message, reply, filename, filepath, force_documen
             if file_has_big:
                 print('1st step')
                 async def _split_files():
-                    rf = sf(filepath, filename, user_id)
-                    if rf is not None:
+                    rf = str(user_id)+'/'+str(uuid4())[:8]
+                    os.mkdir(rf)
+                    task = asyncio.create_task(sf(filepath, rf))
+                    done, pending = await asyncio.wait({task})
+                    if task in pending:
+                        while task in pending:
+                            await asyncio.sleep(1)
+                    if task in done and rf is not None:
                         for i in os.listdir(rf):
                             to_upload.append((rf+'/'+i, filename))
-                            print('2nd step')
                 split_task = asyncio.create_task(_split_files())
             else:
                 to_upload.append((filepath, filename))
@@ -303,17 +310,13 @@ async def progress_callback(current, total, client, message, reply, filename, us
         for admin_chat in ADMIN_CHATS:
             await client.send_message(admin_chat, traceback.format_exc(), parse_mode=None)
 
-def sf(filepath, filename, user_id):
+async def sf(filepath, filename, rf):
     ext = os.path.splitext(filename)[1]
-    args =  ["7z", "a", "-tzip", "-y", "-mx1"]
-    rf = str(user_id)+'/'+str(uuid4())[:8]
-    os.mkdir(rf)
+    args =  ["7z", "a", "-tzip", "-y", "-mx0"]
     args.append(os.path.join(rf, os.path.basename(filepath)[-(248-len(ext)):]+'.zip'))
     args.append(filepath)
     args.append("-v1995m")
     proc = subprocess.Popen(args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = proc.communicate()
     if b"Everything is Ok" in out:
-        return rf
-    if b"ERROR" in out:
-        return None
+        return
