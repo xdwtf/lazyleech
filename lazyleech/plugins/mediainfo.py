@@ -1,6 +1,7 @@
 import os
 import shlex
 import asyncio
+from typing import Tuple
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from .. import ALL_CHATS
