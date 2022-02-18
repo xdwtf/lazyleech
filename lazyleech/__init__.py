@@ -45,6 +45,9 @@ class SendAsZipFlag:
 class ForceDocumentFlag:
     pass
 
+class EncodeFile:
+    pass
+
 def memory_file(name=None, contents=None, *, bytes=True):
     if isinstance(contents, str) and bytes:
         contents = contents.encode()

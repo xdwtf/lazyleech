@@ -30,8 +30,8 @@ from natsort import natsorted
 from pyrogram import StopTransmission
 from pyrogram.parser import html as pyrogram_html
 from pyrogram.errors.exceptions.bad_request_400 import MessageIdInvalid, MessageNotModified
-from .. import PROGRESS_UPDATE_DELAY, ADMIN_CHATS, preserved_logs, TESTMODE, SendAsZipFlag, ForceDocumentFlag, LICHER_CHAT, LICHER_STICKER, LICHER_FOOTER, LICHER_PARSE_EPISODE, IGNORE_PADDING_FILE
-from .misc import split_files, get_file_mimetype, format_bytes, get_video_info, generate_thumbnail, return_progress_string, calculate_eta, watermark_photo
+from .. import PROGRESS_UPDATE_DELAY, ADMIN_CHATS, preserved_logs, TESTMODE, SendAsZipFlag, ForceDocumentFlag, EncodeFile, LICHER_CHAT, LICHER_STICKER, LICHER_FOOTER, LICHER_PARSE_EPISODE, IGNORE_PADDING_FILE
+from .misc import split_files, get_file_mimetype, format_bytes, get_video_info, generate_thumbnail, return_progress_string, calculate_eta, watermark_photo, runcmd
 
 upload_queue = asyncio.Queue()
 upload_statuses = dict()
@@ -98,6 +98,17 @@ async def _upload_worker(client, message, reply, torrent_info, user_id, flags):
             await asyncio.gather(reply.edit_text('Download successful, zipping files...'), client.loop.run_in_executor(None, _zip_files))
             asyncio.create_task(reply.edit_text('Download successful, uploading files...'))
             files[filepath] = filename
+        elif EncodeFile in flags:
+            for file in torrent_info['files']:
+                path = file['path']
+                name = filepath.replace(os.path.join(torrent_info['dir'], ''), '', 1)
+                ext = path.split(".").pop()
+                filename = ".".join(path) + "_encoded" + f".{ext}"
+                filepath = os.path.dirname(path)+"/"+filename
+                cmd = f"""ffmpeg -i "{path}" -c:v libx265 -crf 28 "{filename}" && echo Done"""
+                await reply.edit_text(f"Encoding {name}")
+                k = await runcmd(cmd)
+                files[filepath] = filename
         else:
             for file in torrent_info['files']:
                 filepath = file['path']
