@@ -1,4 +1,21 @@
+# lazyleech - Telegram bot primarily to leech from torrents and upload to Telegram
+# Copyright (c) 2021 lazyleech developers <theblankx protonmail com, meliodas_bot protonmail com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """ Download Youtube Video / Audio in a User friendly interface """
+
 # --------------------------- #
 #   Modded ytdl by code-rgb   #
 # --------------------------- #
@@ -42,8 +59,8 @@ BASE_YT_URL = "https://www.youtube.com/watch?v="
 YOUTUBE_REGEX = comp_regex(
     r"(?:youtube\.com|youtu\.be)/(?:[\w-]+\?v=|embed/|v/|shorts/)?([\w-]{11})"
 )
-PATH = "./ytdl/ytsearch.json"
-DOWN_PATH = "./ytdl/downloads"
+PATH = "./lazyleech/utils/ytdl/ytsearch.json"
+DOWN_PATH = "./lazyleech/utils/ytdl/downloads"
 
 
 class YT_Search_X:
@@ -115,7 +132,7 @@ async def get_ytthumb(videoid: str):
 
 user_search = defaultdict(list)
 
-@Client.on_message(filters.command("ytdl"))
+@Client.on_message(filters.command(["ytdl", "youtube"]) & filters.chat(ALL_CHATS))
 async def iytdl_inline(client: Client, message: Message):
     if not message.chat.id in ALL_CHATS:
         return
@@ -132,7 +149,6 @@ async def iytdl_inline(client: Client, message: Message):
     if not input_url:
         x = await message.reply_text("Input or reply to a valid youtube URL")
         await asyncio.sleep(5)
-        await x.delete()
         return
     x = await message.reply_text(f"🔎 Searching Youtube for: <code>'{input_url}'</code>")
     input_url = input_url.strip()
@@ -143,7 +159,6 @@ async def iytdl_inline(client: Client, message: Message):
         if len(resp) == 0:
             await x.edit_text(f'No Results found for "{input_url}"')
             await asyncio.sleep(5)
-            await x.delete()
             return
         outdata = await result_formatter(resp)
         key_ = rand_key()
@@ -208,7 +223,7 @@ async def ytdl_download_callback(client: Client, c_q: CallbackQuery):
     yt_url = BASE_YT_URL + yt_code
     await c_q.edit_message_text(
         text=(
-            f"**⬇️ Downloading {media_type} ...**"
+            f"<b>⬇️ Downloading {media_type} ...</b>"
             f"\n\n🔗  <b><a href='{yt_url}'>Link</a></b>\n🆔  <b>Format Code</b> : {disp_str}"
         ),
     )
@@ -226,6 +241,13 @@ async def ytdl_download_callback(client: Client, c_q: CallbackQuery):
             thumb_pic = _path
         else:
             _fpath = _path
+    try:
+        metadata = extractMetadata(createParser(new_file_location))
+        duration = 0
+        if metadata.has("duration"):
+           duration = metadata.get('duration').seconds
+    except:
+        duration = 0
     if not thumb_pic and downtype == "v":
         thumb_pic = str(
             await run_in_thread(download)(await get_ytthumb(yt_code))
@@ -235,8 +257,11 @@ async def ytdl_download_callback(client: Client, c_q: CallbackQuery):
             media=(
                 InputMediaVideo(
                     media=str(Path(_fpath)),
-                    caption=f"📹  <b><a href = '{yt_url}'>{Path(_fpath).name}</a></b>",
-                    thumb=thumb_pic
+                    caption=f"<a href = '{yt_url}'>{Path(_fpath).name}</a>",
+                    thumb=thumb_pic,
+                    duration=duration,
+                    width=1280,
+                    height=720
                 )
             ),
         )
@@ -245,7 +270,7 @@ async def ytdl_download_callback(client: Client, c_q: CallbackQuery):
             media=(
                 InputMediaAudio(
                     media=str(Path(_fpath)),
-                    caption=f"🎵  <b><a href = '{yt_url}'>{Path(_fpath).name}</a></b>",
+                    caption=f"<a href = '{yt_url}'>{Path(_fpath).name}</a>",
                     thumb=thumb_pic
                 )
             ),
@@ -599,7 +624,7 @@ def post_to_telegraph(a_title: str, content: str) -> str:
     post_page = post_client.post(
         title=a_title,
         author=auth_name,
-        author_url="https://t.me/lostb053",
+        author_url="https://t.me/Nexiuo",
         text=content,
     )
     return post_page["url"]
