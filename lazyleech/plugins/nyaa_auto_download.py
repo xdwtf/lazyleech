@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup as bs
 from motor.motor_asyncio import AsyncIOMotorClient
 from motor.core import AgnosticClient, AgnosticDatabase, AgnosticCollection
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from .. import app, ADMIN_CHATS, ForceDocumentFlag
+from .. import app, EVERYONE_CHATS, ForceDocumentFlag
 from .leech import initiate_torrent
 
 rsslink = list(filter(lambda x: x, map(str, os.environ.get("NYAA_RSS_LINKS", "https://nyaa.si/?page=rss&c=0_0&f=0&u=AkihitoSubsWeeklies").split(' '))))
@@ -42,11 +42,10 @@ if os.environ.get('DB_URL'):
                 await A.find_one_and_delete({'site': i})
                 await A.insert_one({'_id': str(da.find('item').find('title')), 'site': i})
         for i in cr:
-            for ii in ADMIN_CHATS:
+            for ii in EVERYONE_CHATS:
                 try:
                     msg = await app.send_message(ii, f"New anime uploaded\n\n{i[0]}\n{i[1]}")
-                    flags = (ForceDocumentFlag,)
-                    await initiate_torrent(app, msg, i[1], flags)
+                    await initiate_torrent(app, msg, i[1])
                 except:
                     pass
 
